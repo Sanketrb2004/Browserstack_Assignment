@@ -1,3 +1,4 @@
+
 # from selenium import webdriver
 # from selenium.webdriver.chrome.service import Service
 # from webdriver_manager.chrome import ChromeDriverManager
@@ -7,18 +8,16 @@
 # import time
 # import os
 
-
 # # ================= GOOGLE TRANSLATE FUNCTION =================
 
 # def translate_text(text):
+
 #     url = "https://google-translate113.p.rapidapi.com/api/v1/translator/json"
 
 #     payload = {
 #         "from": "es",
 #         "to": "en",
-#         "json": {
-#             "text": text
-#         }
+#         "json": {"text": text}
 #     }
 
 #     headers = {
@@ -27,34 +26,53 @@
 #         "X-RapidAPI-Host": "google-translate113.p.rapidapi.com"
 #     }
 
-#     response = requests.post(url, json=payload, headers=headers, timeout=20)
-#     return response.json()["trans"]["text"]
+#     try:
+#         r = requests.post(url, json=payload, headers=headers, timeout=20)
+#         data = r.json()
 
+#         trans = data.get("trans", "")
+
+#         # Handle both string and dict API response
+#         if isinstance(trans, dict):
+#             return trans.get("text", "")
+#         return trans
+
+#     except:
+#         return ""
 
 # # ===========================================================
 
-# try:
-#     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
-#     wait = WebDriverWait(driver, 20)
+# driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+# wait = WebDriverWait(driver, 20)
 
+# try:
+
+#     # STEP 1 — Open Opinion Page
 #     driver.get("https://elpais.com/opinion/")
 
-#     # Wait until at least some articles load
-#     wait.until(lambda d: len(d.find_elements(By.CSS_SELECTOR, "article h2 a")) >= 5)
+#     wait.until(lambda d: len(d.find_elements(By.CSS_SELECTOR, "article")) > 5)
 
-#     # ⭐ GET ALL ARTICLES FIRST
-#     all_articles = driver.find_elements(By.CSS_SELECTOR, "article h2 a")
+#     # STEP 2 — Extract FIRST 5 REAL ARTICLES (TOP TO BOTTOM)
+#     article_blocks = driver.find_elements(By.CSS_SELECTOR, "article")
 
-#     # ⭐ TAKE FIRST 5 REAL TITLES FROM TOP
-#     articles = []
-#     for a in all_articles:
-#         title = a.text.strip()
-#         if title and title.strip() != "":
+#     articles_data = []
 
-#             articles.append(a)
-#         if len(articles) == 5:
+#     for block in article_blocks:
+#         try:
+#             title_el = block.find_element(By.CSS_SELECTOR, "h2 a")
+#             title = title_el.text.strip()
+#             link = title_el.get_attribute("href")
+
+#             if title and link:
+#                 articles_data.append((title, link))
+
+#         except:
+#             continue
+
+#         if len(articles_data) == 5:
 #             break
 
+#     # STEP 3 — Prepare Image Folder
 #     if not os.path.exists("images"):
 #         os.makedirs("images")
 
@@ -62,54 +80,70 @@
 
 #     print("\nProcessing First 5 Articles...\n")
 
-#     for i, article in enumerate(articles, start=1):
-
-#         title = article.text.strip()
-#         link = article.get_attribute("href")
+#     # STEP 4 — Process Each Article
+#     for i, (title, link) in enumerate(articles_data, start=1):
 
 #         print(f"\nArticle {i}: {title}")
 
-#         # TRANSLATE
-#         try:
-#             translated = translate_text(title)
-#             translated_titles.append(translated)
-#             print("Translated Title:", translated)
-#         except Exception as e:
-#             print("Translation Failed:", e)
+#         # Translate Title
+#         translated = translate_text(title)
+#         translated_titles.append(translated)
+#         print("Translated Title:", translated)
 
-#         # OPEN ARTICLE PAGE
+#         # Open Article Page
 #         driver.get(link)
 #         time.sleep(3)
 
-#         # CONTENT EXTRACTION
+#         # Extract Spanish Content
 #         paragraphs = driver.find_elements(By.CSS_SELECTOR, "article p")
 #         content = " ".join([p.text for p in paragraphs[:5]])
-
 #         print("Content Preview:", content[:200], "...")
 
-#         # IMAGE DOWNLOAD
+#         # Download Cover Image
 #         try:
-#             image = driver.find_element(By.CSS_SELECTOR, "figure img")
-#             image_url = image.get_attribute("src")
+#             img = driver.find_element(By.CSS_SELECTOR, "figure img")
+#             img_url = img.get_attribute("src")
 
-#             img = requests.get(image_url, timeout=20).content
+#             img_data = requests.get(img_url, timeout=20).content
 #             with open(f"images/article_{i}.jpg", "wb") as f:
-#                 f.write(img)
+#                 f.write(img_data)
 
 #             print("Image downloaded")
 
 #         except:
 #             print("No image found")
-
-#         driver.back()
+#         # Go Back to Opinion Page
+#         driver.get("https://elpais.com/opinion/")
 #         time.sleep(2)
+#     print("\nTranslated Titles:\n", translated_titles)
 
-#     print("\nAll Translated Titles:\n", translated_titles)
+#     # ================= WORD REPETITION ANALYSIS =================
+#     from collections import Counter
+
+#     all_words = []
+
+#     for title in translated_titles:
+#         if title:   # ⭐ Safety check (avoid empty strings)
+#             words = title.lower().split()
+#             all_words.extend(words)
+
+#     word_count = Counter(all_words)
+
+#     print("\nWords repeated more than twice:\n")
+
+#     found = False   # ⭐ Industry pattern flag
+
+#     for word, count in word_count.items():
+#         if count > 2:
+#             print(f"{word} -> {count}")
+#             found = True
+
+#     if not found:
+#         print("No words repeated more than twice.")
+
+#     # ===========================================================
 
 #     input("\nPress Enter to close browser...")
-
-# except Exception as e:
-#     print("Error:", e)
 
 # finally:
 #     driver.quit()
@@ -119,12 +153,13 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 import requests
-import time
 import os
 
 # ================= GOOGLE TRANSLATE FUNCTION =================
 
 def translate_text(text):
+
+    print("[INFO] Translating title...")
 
     url = "https://google-translate113.p.rapidapi.com/api/v1/translator/json"
 
@@ -143,78 +178,98 @@ def translate_text(text):
     try:
         r = requests.post(url, json=payload, headers=headers, timeout=20)
         data = r.json()
-
         trans = data.get("trans", "")
 
-        # Handle both string and dict API response
         if isinstance(trans, dict):
             return trans.get("text", "")
         return trans
 
     except:
+        print("[WARN] Translation failed")
         return ""
 
 # ===========================================================
+
+print("[INFO] Launching browser...")
 
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
 wait = WebDriverWait(driver, 20)
 
 try:
 
-    # STEP 1 — Open Opinion Page
+    print("[INFO] Opening Opinion section...")
     driver.get("https://elpais.com/opinion/")
 
     wait.until(lambda d: len(d.find_elements(By.CSS_SELECTOR, "article")) > 5)
 
-    # STEP 2 — Extract FIRST 5 REAL ARTICLES (TOP TO BOTTOM)
-    article_blocks = driver.find_elements(By.CSS_SELECTOR, "article")
+    print("[INFO] Opinion section loaded successfully.")
 
+    # ⭐ GUARANTEED FIRST 5 REAL ARTICLES
     articles_data = []
 
-    for block in article_blocks:
-        try:
-            title_el = block.find_element(By.CSS_SELECTOR, "h2 a")
-            title = title_el.text.strip()
-            link = title_el.get_attribute("href")
+    print("[INFO] Extracting first 5 article titles...")
 
-            if title and link:
-                articles_data.append((title, link))
+    while len(articles_data) < 5:
 
-        except:
-            continue
+        article_blocks = driver.find_elements(By.CSS_SELECTOR, "article")
 
-        if len(articles_data) == 5:
-            break
+        for block in article_blocks:
+            try:
+                title_el = block.find_element(By.CSS_SELECTOR, "h2 a")
+                title = title_el.text.strip()
+                link = title_el.get_attribute("href")
 
-    # STEP 3 — Prepare Image Folder
+                if title and link and (title, link) not in articles_data:
+                    print(f"[INFO] Found article title: {title}")
+                    articles_data.append((title, link))
+
+            except:
+                continue
+
+            if len(articles_data) == 5:
+                break
+
+        if len(articles_data) < 5:
+            print("[INFO] Waiting for more articles to load...")
+            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+
+    print(f"[INFO] Total Articles Collected: {len(articles_data)}")
+
     if not os.path.exists("images"):
         os.makedirs("images")
 
     translated_titles = []
 
-    print("\nProcessing First 5 Articles...\n")
+    print("\n[INFO] Processing Articles...\n")
 
-    # STEP 4 — Process Each Article
     for i, (title, link) in enumerate(articles_data, start=1):
 
-        print(f"\nArticle {i}: {title}")
+        print(f"\n[INFO] Processing Article {i}")
+        print(f"[INFO] Spanish Title: {title}")
 
-        # Translate Title
         translated = translate_text(title)
         translated_titles.append(translated)
-        print("Translated Title:", translated)
+        print(f"[INFO] Translated Title: {translated}")
 
-        # Open Article Page
+        print("[INFO] Opening article page...")
         driver.get(link)
-        time.sleep(3)
 
-        # Extract Spanish Content
+        # ⭐ SAFE FAST WAIT
+        try:
+            wait.until(lambda d:
+                len(d.find_elements(By.CSS_SELECTOR, "article")) > 0 or
+                len(d.find_elements(By.TAG_NAME, "p")) > 0
+            )
+        except:
+            print("[WARN] Article content slow, continuing...")
+
         paragraphs = driver.find_elements(By.CSS_SELECTOR, "article p")
         content = " ".join([p.text for p in paragraphs[:5]])
-        print("Content Preview:", content[:200], "...")
 
-        # Download Cover Image
+        print("[INFO] Content extracted successfully.")
+
         try:
+            print("[INFO] Downloading article image...")
             img = driver.find_element(By.CSS_SELECTOR, "figure img")
             img_url = img.get_attribute("src")
 
@@ -222,18 +277,46 @@ try:
             with open(f"images/article_{i}.jpg", "wb") as f:
                 f.write(img_data)
 
-            print("Image downloaded")
+            print("[INFO] Image downloaded successfully.")
 
         except:
-            print("No image found")
+            print("[WARN] No image found.")
 
-        # Go Back to Opinion Page
+        print("[INFO] Returning to Opinion section...")
         driver.get("https://elpais.com/opinion/")
-        time.sleep(2)
+        wait.until(lambda d: len(d.find_elements(By.CSS_SELECTOR, "article")) > 5)
 
-    print("\nTranslated Titles:\n", translated_titles)
+    print("\n[INFO] All Translated Titles:\n", translated_titles)
+
+    # ================= WORD REPETITION ANALYSIS =================
+    from collections import Counter
+
+    print("\n[INFO] Performing word repetition analysis...")
+
+    all_words = []
+
+    for title in translated_titles:
+        if title:
+            all_words.extend(title.lower().split())
+
+    word_count = Counter(all_words)
+
+    print("\nWords repeated more than twice:\n")
+
+    found = False
+    for word, count in word_count.items():
+        if count > 2:
+            print(f"{word} -> {count}")
+            found = True
+
+    if not found:
+        print("No words repeated more than twice.")
+
+    print("\n[INFO] Script execution completed successfully.")
 
     input("\nPress Enter to close browser...")
 
 finally:
+    print("[INFO] Closing browser...")
     driver.quit()
+
