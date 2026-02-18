@@ -115,28 +115,6 @@ Build an automation solution that:
 
 ---
 
-## 📂 Project Structure
-
-Browserstack_Assignment/
-│
-├── main.py
-│ ├ Scraping Logic
-│ ├ Translation API Integration
-│ ├ Text Analysis
-│ └ Image Download
-│
-├── browserstack_test.py
-│ ├ Cloud Selenium Execution
-│ ├ Parallel Thread Execution
-│ ├ Device Logging
-│ └ Stability Wait Handling
-│
-├── images/
-│ └ Downloaded Article Images
-│
-└── README.md
-
----
 
 ## ⚙ Technology Stack
 
