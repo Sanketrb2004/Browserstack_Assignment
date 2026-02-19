@@ -5,8 +5,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 import threading
 
-USERNAME = "sanketbauskar_vibxzj"
-ACCESS_KEY = "3PNtG423aCNmX4TxZxvY"
+USERNAME = "your_username"
+ACCESS_KEY = "your_access_key"
 
 URL = "https://elpais.com/opinion/"
 
