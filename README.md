@@ -135,7 +135,73 @@ Build an automation solution that:
 - RapidAPI Google Translate
 
 ---
+# 🔐 Environment Variables (.env Setup)
 
+⚠ **Important:**
+This project uses environment variables to securely store API credentials.
+Do NOT hardcode sensitive keys in the source code.
+
+---
+
+## Step 1: Create `.env` File
+
+Create a file named:
+
+```
+.env
+```
+
+Add the following:
+
+```
+# ==========================
+# RapidAPI - Google Translate
+# ==========================
+RAPIDAPI_KEY=your_rapidapi_key_here
+
+# ==========================
+# BrowserStack Credentials
+# ==========================
+BROWSERSTACK_USERNAME=your_browserstack_username
+BROWSERSTACK_ACCESS_KEY=your_browserstack_access_key
+```
+
+---
+
+## Step 2: Install dotenv
+
+```bash
+pip install python-dotenv
+```
+
+---
+
+## Step 3: Load Environment Variables in Python
+
+```python
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+RAPIDAPI_KEY = os.getenv("RAPIDAPI_KEY")
+BROWSERSTACK_USERNAME = os.getenv("BROWSERSTACK_USERNAME")
+BROWSERSTACK_ACCESS_KEY = os.getenv("BROWSERSTACK_ACCESS_KEY")
+```
+
+---
+
+## Step 4: Add `.env` to `.gitignore`
+
+Create or update `.gitignore`:
+
+```
+.env
+```
+
+This prevents secrets from being pushed to GitHub.
+
+---
 ## 🚀 Setup Instructions
 
 ### Install Dependencies
