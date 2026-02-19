@@ -23,7 +23,7 @@ def translate_text(text):
 
     headers = {
         "Content-Type": "application/json",
-        "X-RapidAPI-Key": "89885d7e38msh6b56401b8d73a72p1c0c81jsn4a7159c76f75",
+        "X-RapidAPI-Key": "ENTER YOUR API KEY",
         "X-RapidAPI-Host": "google-translate113.p.rapidapi.com"
     }
 
